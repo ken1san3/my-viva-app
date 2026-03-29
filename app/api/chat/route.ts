@@ -5,8 +5,7 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    const { messages, code }: { messages: UIMessage[]; code?: string } =
-      await req.json();
+    const { messages, code }: { messages: UIMessage[]; code?: string } = await req.json();
 
     const systemPrompt = code
       ? `あなたは中学生にプログラミングを教える、親しみやすい先生です。
@@ -23,21 +22,16 @@ ${code}
       : 'プログラミングの学習をサポートしてください。';
 
     const result = streamText({
+      // 大量アクセス・高速応答に特化した最軽量モデルを指定
       model: google('gemini-2.5-flash-lite'),
       system: systemPrompt,
       messages: await convertToModelMessages(messages),
     });
 
-    return result.toUIMessageStreamResponse({
-      getErrorMessage: (error) =>
-        error instanceof Error
-          ? error.message
-          : typeof error === 'string'
-          ? error
-          : 'unknown error',
-    });
+    // 最新のAI SDK仕様に合わせた、最もシンプルなストリーム返却
+    return result.toUIMessageStreamResponse();
   } catch (error) {
-    console.error(error);
+    console.error('API Error:', error);
     return new Response('Internal Server Error', { status: 500 });
   }
 }
